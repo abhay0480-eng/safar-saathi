@@ -32,3 +32,4 @@ browser (CORS error), use another one for now: Reel 13 moves the call to our own
 | EP | Concept | Feature |
 |---|---|---|
 | 01 | First call: `messages`, roles, `choices[0].message.content` | Prompt box → trip plan on screen |
+| 02 | Tokens, `finish_reason`, length via the prompt (not a hard limit) | Short / Detailed toggle · token counter · cut-off banner |
