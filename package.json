@@ -1,0 +1,13 @@
+{
+  "name": "safar-saathi",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI trip planner, built one feature per reel in the AI Engineering series",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  }
+}
