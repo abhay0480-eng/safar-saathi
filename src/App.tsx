@@ -1,21 +1,25 @@
 import { useState } from "react";
 import type { Mode } from "./features/ep02-short-answers";
-import { continueAnswer, sendMessage, type ChatReply, type Msg } from "./features/ep03-memory";
+import type { ChatReply, Msg } from "./features/ep03-memory";
+import { continueWithSystem, DEFAULT_SYSTEM, sendWithSystem } from "./features/ep04-system-prompt";
 
 export default function App() {
-  const [input, setInput] = useState("Mujhe delhi se ek weekend trip idea do");
+  const [input, setInput] = useState("Weekend pe kahan jaun?");
   const [mode, setMode] = useState<Mode>("short");
   const [limitTest, setLimitTest] = useState(false); // EP02 experiment: cap at 256 tokens
   const [memory, setMemory] = useState(true); // EP03 experiment: turn memory off to see the bug
   const [history, setHistory] = useState<Msg[]>([]); // EP03: the app's memory
   const [last, setLast] = useState<ChatReply | null>(null);
   const [loading, setLoading] = useState(false);
+  const [useSystem, setUseSystem] = useState(true); // EP04 experiment: OFF = rules glued to every message (Ep 3 way)
+  const [system, setSystem] = useState(DEFAULT_SYSTEM); // EP04: Saathi's rulebook, editable
+  const [showRules, setShowRules] = useState(false);
   const limit = limitTest ? 256 : undefined;
 
   async function handleSend() {
     const text = input.trim();
     setLoading(true);
-    const reply = await sendMessage(history, text, mode, memory, limit); // error handling comes in Ep 6
+    const reply = await sendWithSystem(history, text, { mode, system, useSystem, memory, limitTokens: limit }); // error handling comes in Ep 6
     setHistory([...history, { role: "user", content: text }, { role: "assistant", content: reply.text }]);
     setLast(reply);
     setInput("");
@@ -24,7 +28,7 @@ export default function App() {
 
   async function handleContinue() {
     setLoading(true);
-    const reply = await continueAnswer(history, limit);
+    const reply = await continueWithSystem(history, { mode, system, useSystem, memory, limitTokens: limit });
     // glue the rest onto the cut-off answer, so the chat shows one complete reply
     const rest = history.slice(0, -1);
     const cut = history[history.length - 1];
@@ -36,7 +40,7 @@ export default function App() {
   function handleReset() {
     setHistory([]);
     setLast(null);
-    setInput("Mujhe delhi se ek weekend trip idea do");
+    setInput("Weekend pe kahan jaun?");
   }
 
   return (
@@ -66,7 +70,7 @@ export default function App() {
       {last && (
         <div className="mb-3">
           <p className="text-sm font-semibold text-stone-500">
-            📨 {last.sent} messages bheje · 🧮 {last.tokens?.prompt ?? "?"} tokens gaye · {last.tokens?.answer ?? "?"} tokens aaye · finish_reason: "{last.finishReason}"
+            📨 {last.sent} messages bheje{useSystem ? " (1 system)" : ""} · 🧮 {last.tokens?.prompt ?? "?"} tokens gaye · {last.tokens?.answer ?? "?"} tokens aaye · finish_reason: "{last.finishReason}"
           </p>
           {last.cutOff && (
             <div className="mt-2 rounded-xl border-2 border-red-600 bg-red-50 p-3 font-bold text-red-700">
@@ -75,6 +79,23 @@ export default function App() {
                 Continue →
               </button>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* EP04: the system prompt = Saathi's rulebook */}
+      {useSystem && (
+        <div className="mb-4 rounded-xl border-2 border-amber-500 bg-amber-50 p-3">
+          <button className="text-sm font-bold text-amber-800" onClick={() => setShowRules(!showRules)}>
+            🧭 Saathi ke rules (system prompt) {showRules ? "▲" : "▼"}
+          </button>
+          {showRules && (
+            <textarea
+              className="mt-2 w-full rounded-lg border-2 border-amber-500 bg-white p-2 font-mono text-sm"
+              rows={6}
+              value={system}
+              onChange={(e) => setSystem(e.target.value)}
+            />
           )}
         </div>
       )}
@@ -109,6 +130,13 @@ export default function App() {
           onClick={() => setMemory(!memory)}
         >
           🧠 Memory {memory ? "ON" : "OFF"}
+        </button>
+        {/* EP04: system prompt switch */}
+        <button
+          className={`rounded-full border-2 px-4 py-2 text-sm font-bold ${useSystem ? "border-amber-600 bg-amber-50 text-amber-800" : "border-stone-400 bg-white text-stone-500"}`}
+          onClick={() => setUseSystem(!useSystem)}
+        >
+          🧭 System prompt {useSystem ? "ON" : "OFF"}
         </button>
         <label className="inline-flex items-center gap-2 text-sm text-stone-600">
           <input type="checkbox" checked={limitTest} onChange={(e) => setLimitTest(e.target.checked)} />

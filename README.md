@@ -34,3 +34,4 @@ browser (CORS error), use another one for now: Reel 13 moves the call to our own
 | 01 | First call: `messages`, roles, `choices[0].message.content` | Prompt box → trip plan on screen |
 | 02 | Tokens, `finish_reason`, length via the prompt (not a hard limit) | Short / Detailed toggle · token counter · cut-off banner |
 | 03 | The API is stateless: memory = sending the whole `messages` history · continuing a cut answer | Chat history · Memory ON/OFF switch · working Continue button · messages-sent counter |
+| 04 | System prompt: rules in one `system` message (first in the array), user message stays clean | Editable "Saathi ke rules" panel · System prompt ON/OFF switch · asks for city/days/budget before planning |
